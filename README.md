@@ -60,6 +60,7 @@ To start with the tasks, clone the repository to your local machine.
 
 Credits: 
 store_project - The store_schema.sql file and the data I use here is taken from https://codewithmosh.com/. 
+
 northwind_project - The northwind data is available on the Internet, and northwind_schema.sql is written/tested by me. 
 
 Both datasets are tweaked a bit by me, so they don't resemble their actual instance.
