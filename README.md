@@ -2,10 +2,15 @@
 This repository includes two projects. store_project and northwind_project. This project is created and tested on MySQL workbench. But I assume other SQL workbenches behave the same.
 
 The project is divided into multiple tasks, 
+
 Task 1 - Import data to SQL database by using python.
+
 Task 2 - Design ETL process to digest the data from MySQL database into a star schema. 
+
 Task 3 - Replicate task 1 into AWS/AZURE/GCP cloud.
+
 Task 4 - Replicate task 2 into AWS/AZURE/GCP cloud.
+
 More tasks to add....
 
 To start with the tasks, clone the repository to your local machine.
