@@ -1,4 +1,4 @@
-# DataModelling
+# Data Modelling
 This repository includes two projects. store_project and northwind_project. This project is created and tested on MySQL workbench. But I assume other SQL workbenches behave the same.
 
 The project is divided into multiple tasks, 
@@ -15,7 +15,7 @@ More tasks to add....
 
 To start with the tasks, clone the repository to your local machine.
 
-#Task 1
+# Task 1
 
 ## store_project
 1. Open store_schema.sql in MySQL and run it. It will create the schema 'store_schema'. 
@@ -65,4 +65,4 @@ northwind_project - The northwind data is available on the Internet, and northwi
 
 Both datasets are tweaked a bit by me, so they don't resemble their actual instance.
 
-#Task 2
+# Task 2
