@@ -49,7 +49,7 @@ To start with the tasks, clone the repository to your local machine.
     
     1.3 Check the below image and understand how the table is connected.
 
-![](store_project/northwind_schema.png)
+![](northwind_project/northwind_schema.png)
 
 2. Open the etl_job.py file in your favorite IDE. Update the database details inside the etl_job.py
 3. Check the other details and update them as required.
