@@ -1,6 +1,6 @@
-DROP DATABASE IF EXISTS `store_db`;
-CREATE DATABASE `store_db`;
-USE `store_db`;
+DROP DATABASE IF EXISTS `store_schema`;
+CREATE DATABASE `store_schema`;
+USE `store_schema`;
 
 CREATE TABLE `products` (
   `product_id` int(11) NOT NULL AUTO_INCREMENT,

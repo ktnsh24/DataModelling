@@ -3,15 +3,18 @@ from etl_scripts import *
 
 # enter database details
 user = 'root'  # please write your user name
-password = 'Docomo123@'  # please write your password
+password = 'password'  # please write your password
 host = 'localhost'  # please write your host address
 port = 3306
-database = 'northwind'  # Please write your db/schema name you defined in SQL db
+# use 'northwind_schema', if you're working with northwind_project.
+database = 'store_schema'
 if __name__ == '__main__':
 
     # specifying the zip file name and zip file extract path
-    zip_name = 'northwind_project/Data.zip'
-    extract_path = 'northwind_project/'
+    # use 'northwind_project/Data.zip', if you're working with northwind_project.
+    zip_name = 'store_project/Data.zip'
+    # use 'northwind_project/', if you're working with northwind_project.
+    extract_path = 'store_project/'
 
     # Extract the data from zip file
     extract_zip(zip_name, extract_path)
@@ -21,23 +24,29 @@ if __name__ == '__main__':
 
     # Write table name exists in SQL DB
     '''
-    Write those table name first in the list, which has no foreign key associated.
+    In the list, write those table name first, which has no foreign key associated.
     E.g. Check the store_db.sql file. products table has no foreign key associated, 
     hence it is added first in the list. orders table has associated foregin key, 
     hence added back in the table.
     '''
 
-    # store_db
-    # sql_table = ["products", "shippers", "customers", "order_statuses",
-    #             "orders", "order_items"]
+    # store_schema
+    sql_table = ["products", "shippers", "customers", "order_statuses",
+                 "orders", "order_items"]
 
-    # northwinf_db
-    sql_table = ["categories", "customers", "suppliers", "employees",
-                 "orders", "products", "order_details"]
+    # northwind_schmea
+    '''
+    In the below sql table, I have purposley changed the order of the table name. 
+    It's a challenge to correct the table name order. 
+    Above, I've described the way how to write these table names in correct order
+    '''
+    # sql_table = [ "suppliers", "employees",
+    #             "products", "categories","customers","orders"]
 
     for table in sql_table:
         # path, where extracted data from zip is located
-        path = 'northwind_project/Data/'
+        # use 'northwind_project/Data/', if you're working with northwind_project.
+        path = 'store_project/Data/'
         data = transform_table(table, path, engine)
         print(data.shape)
 

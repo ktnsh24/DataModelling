@@ -1,4 +1,4 @@
-USE store_db;
+USE store_schema;
 
 -- stage_table (Extract data from OLTP db), Declare the Grain 
 DROP TABLE IF EXISTS stage_table;
@@ -25,15 +25,15 @@ ON p.product_id = oi.product_id
 DROP TABLE IF EXISTS dim_customers;
 CREATE TABLE dim_customers (
   `dim_customer_id` INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  `customer_id` int NOT NULL,
-  `first_name` varchar(50) NOT NULL,
-  `last_name` varchar(50) NOT NULL,
-  `birth_date` date DEFAULT NULL,
-  `phone` varchar(50) DEFAULT NULL,
-  `address` varchar(50) NOT NULL,
-  `city` varchar(50) NOT NULL,
-  `state` char(2) NOT NULL,
-  `points` int NOT NULL DEFAULT '0'
+  `customer_id` INTEGER NOT NULL,
+  `first_name` VARCHAR(50) NOT NULL,
+  `last_name` VARCHAR(50) NOT NULL,
+  `birth_date` DATE DEFAULT NULL,
+  `phone` VARCHAR(50) DEFAULT NULL,
+  `address` VARCHAR(50) DEFAULT NULL,
+  `city` VARCHAR(50) DEFAULT NULL,
+  `state` CHAR(2) DEFAULT NULL,
+  `points` INTEGER DEFAULT NULL
   );
   
 INSERT INTO dim_customers (`customer_id`, `first_name`, 
@@ -44,117 +44,92 @@ FROM stage_table st;
 
  -- DIM_ORDERS
  
-DROP TABLE IF EXISTS DIM_ORDERS;
-CREATE TABLE DIM_ORDERS (
-  O_ORDERKEY      INTEGER PRIMARY KEY NOT NULL,
-  O_ORDERSTATUS   TEXT NOT NULL,
-  O_ORDERPRIORITY TEXT NOT NULL,  
-  O_CLERK         TEXT NOT NULL, 
-  O_SHIPPRIORITY  INTEGER NOT NULL,
-  O_COMMENT       TEXT NOT NULL
+DROP TABLE IF EXISTS dim_order_statuses;
+CREATE TABLE dim_order_statuses (
+  `dim_order_statuses_id` INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  `order_status_id`      INTEGER NOT NULL,
+  `name`   TEXT DEFAULT NULL
   );
-
   
-INSERT INTO DIM_ORDERS
-SELECT DISTINCT sto.O_ORDERKEY, sto.O_ORDERSTATUS, sto.O_ORDERPRIORITY, sto.O_CLERK, sto.O_SHIPPRIORITY, sto.O_COMMENT
-FROM stage_table_one sto;
+INSERT INTO dim_order_statuses ( `order_status_id`, `name`)
+SELECT DISTINCT st.order_status_id, st.order_status
+FROM stage_table st;
 
 -- DIM_ORDER_DATE
 
-DROP TABLE IF EXISTS DIM_ORDER_DATE;
-CREATE TABLE DIM_ORDER_DATE (
-  PRIKEY INTEGER PRIMARY KEY NOT NULL,
-  O_ORDERDATE	DATE NOT NULL,
-  O_ORDERYEAR   SMALLINT NOT NULL,
-  O_ORDERMONTH SMALLINT NOT NULL,  
-  O_ORDERDAY SMALLINT NOT NULL
+DROP TABLE IF EXISTS dim_order_date;
+CREATE TABLE dim_order_date (
+`dim_order_date_id` INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  `order_date`	DATE NOT NULL,
+  `order_year`   SMALLINT NOT NULL,
+  `order_month` SMALLINT NOT NULL,  
+  `order_day` SMALLINT NOT NULL
   );
   
-INSERT INTO DIM_ORDER_DATE
-SELECT DISTINCT sto.PRIKEY, sto.O_ORDERDATE, sto.O_ORDERYEAR, sto.O_ORDERMONTH, sto.O_ORDERDAY
-FROM stage_table_one sto;
+INSERT INTO dim_order_date (`order_date`, `order_year`, `order_month`, `order_day`)
+SELECT DISTINCT st.order_date, st.order_year, st.order_month, st.order_day
+FROM stage_table st;
 
--- DIM_SUPPLIER
+-- DIM_PRODUCTS
 
-DROP TABLE IF EXISTS DIM_SUPPLIER;
-CREATE TABLE DIM_SUPPLIER (
-S_SUPPKEY   INTEGER PRIMARY KEY NOT NULL,
-S_NAME      TEXT NOT NULL,
-S_ADDRESS   TEXT NOT NULL,
-S_NATION 	  TEXT NOT NULL,
-S_PHONE     TEXT NOT NULL,
-S_ACCTBAL   INTEGER NOT NULL,
-S_COMMENT   TEXT NOT NULL
+DROP TABLE IF EXISTS dim_products;
+CREATE TABLE dim_products (
+`dim_product_id` INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+`product_id` INTEGER NOT NULL,
+`name`   TEXT NOT NULL,
+`quantity_in_stock`     INTEGER DEFAULT NULL,
+`unit_price`   DECIMAL(4,2) NOT NULL
 );
   
-INSERT INTO DIM_SUPPLIER
-SELECT DISTINCT st.S_SUPPKEY, st.S_NAME, st.S_ADDRESS, st.N_NAME, st.S_PHONE, st.S_ACCTBAL, st.S_COMMENT 
-FROM stage_table_two st;
+INSERT INTO dim_products (`product_id`, `name`, `quantity_in_stock`, `unit_price`)
+SELECT DISTINCT st.product_id, st.name, st.quantity_in_stock, st.unit_price
+FROM stage_table st;
 
--- DIM_PART
+-- DIM_SHIPPERS
 
-DROP TABLE IF EXISTS DIM_PART;  
-CREATE TABLE DIM_PART (
-P_PARTKEY     INTEGER PRIMARY KEY NOT NULL,
-P_NAME        TEXT NOT NULL,
-P_MFGR        TEXT NOT NULL,
-P_BRAND       TEXT NOT NULL,
-P_TYPE        TEXT NOT NULL,
-P_SIZE        INTEGER NOT NULL,
-P_CONTAINER   TEXT NOT NULL,
-P_RETAILPRICE INTEGER NOT NULL,
-P_COMMENT     TEXT NOT NULL
+DROP TABLE IF EXISTS dim_shippers;  
+CREATE TABLE dim_shippers (
+`dim_shippers_id` INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+`shipper_id`        INTEGER NOT NULL,
+`shipper_name`        TEXT NOT NULL
 );
 
-INSERT INTO DIM_PART
-SELECT DISTINCT st.P_PARTKEY, st.P_NAME, st.P_MFGR, st.P_BRAND, st.P_TYPE, st.P_SIZE, st.P_CONTAINER, st.P_RETAILPRICE, st.P_COMMENT
-FROM stage_table_two st;
+INSERT INTO dim_shippers (`shipper_id`, `shipper_name`  )
+SELECT DISTINCT st.shipper_id, st.shipper_name
+FROM stage_table st;
 
--- DIM_LINEITEM
 
-DROP TABLE IF EXISTS DIM_LINEITEM;
-CREATE TABLE DIM_LINEITEM (
-  PRIKEY    INTEGER PRIMARY KEY NOT NULL,
-  L_LINENUMBER    INTEGER NOT NULL,
-  L_RETURNFLAG    TEXT NOT NULL,
-  L_LINESTATUS    TEXT NOT NULL,
-  L_SHIPINSTRUCT  TEXT NOT NULL,
-  L_SHIPMODE      TEXT NOT NULL,
-  L_COMMENT       TEXT NOT NULL
-  );
 
-INSERT INTO DIM_LINEITEM
-SELECT DISTINCT sto.PRIKEY, sto.L_LINENUMBER, sto.L_RETURNFLAG, sto.L_LINESTATUS, sto.L_SHIPINSTRUCT, 
-sto.L_SHIPMODE, sto.L_COMMENT
-FROM stage_table_one sto;
+-- FACT_SALES MODEL
 
--- FACT_MODEL_ONE
-
-DROP TABLE IF EXISTS FACT_MODEL_ONE;  
-CREATE TABLE FACT_MODEL_ONE (
-PRIKEY       INTEGER NOT NULL,
-C_CUSTKEY	INTEGER NOT NULL,
-O_ORDERKEY     INTEGER NOT NULL,
-L_QUANTITY      INTEGER NOT NULL,
-L_EXTENDEDPRICE INTEGER NOT NULL,
-L_DISCOUNT      INTEGER NOT NULL,
-L_TAX           INTEGER NOT NULL,
-O_TOTALPRICE   INTEGER NOT NULL,
-O_ORDERDATE  DATE NOT NULL
+DROP TABLE IF EXISTS fact_sales;  
+CREATE TABLE fact_sales (
+`fact_sales_id` INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+`customer_id` INTEGER NOT NULL,
+`order_status_id`	INTEGER NOT NULL,
+`product_id` INTEGER NOT NULL,
+`shipper_id` INTEGER NOT NULL,
+`quantity`     DECIMAL(4,2) NOT NULL,
+`item_unit_price` INTEGER NOT NULL,
+`order_date`     DATE NOT NULL
 );
 
-INSERT INTO FACT_MODEL_ONE
-SELECT DISTINCT DL.PRIKEY, DC.C_CUSTKEY, DOR.O_ORDERKEY, sto.L_QUANTITY, 
-sto.L_EXTENDEDPRICE, sto.L_DISCOUNT, sto.L_TAX, sto.O_TOTALPRICE, DOD.O_ORDERDATE
-FROM stage_table_one sto 
-JOIN DIM_CUSTOMER DC ON
-DC.C_CUSTKEY = sto.C_CUSTKEY
-JOIN DIM_ORDERS DOR ON
-DOR.O_ORDERKEY = sto.O_ORDERKEY
-JOIN DIM_ORDER_DATE DOD ON
-DOD.PRIKEY = DOR.O_ORDERKEY
-JOIN DIM_LINEITEM DL ON
-DL.PRIKEY = sto.PRIKEY;
+INSERT INTO fact_sales ( `customer_id`, `order_status_id`, `product_id`,
+`shipper_id`, `quantity`, `item_unit_price`, `order_date`)
+SELECT DISTINCT dc.customer_id, dos.order_status_id, dp.product_id, ds.shipper_id, 
+st.quantity, st.item_unit_price, dod.order_date
+FROM stage_table st 
+JOIN dim_customers dc ON
+dc.customer_id = st.customer_id
+JOIN dim_order_statuses dos ON
+dos.order_status_id = st.order_status_id
+JOIN dim_order_date dod ON
+dod.order_date = st.order_date
+JOIN dim_products dp ON
+dp.product_id = st.product_id
+JOIN dim_shippers ds ON
+ds.shipper_id = st.shipper_id
+ORDER BY dod.order_date;
 
 
 -- FACT_MODEL_TWO

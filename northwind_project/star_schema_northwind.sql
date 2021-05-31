@@ -1,183 +1,268 @@
-USE northwind;
+USE `northwind_schema`;
+-- Currently data in the database include redundant data. Tables such as customers, employees, suppliers, and categories 
+-- are in normalised state but still include redundant data. For analytics purpose we only need those transactions which occur.
+-- In case of customers, we only need those customers who made some transactions in a given period.
+-- In case of suppliers, we only need those suppliers who supplied something in a given period.
+-- In case of employees, we only need those employees who attended customers in a given period.
+-- Table orders is in the denormalised state and include no redundant data. However for the 
+-- purpose of dimensional modelling, we can normalise orders table further.
+-- Table products in in denormalsied state but include redundant data.
 
--- stage_table_one
-DROP TABLE IF EXISTS stage_table;
-CREATE TABLE stage_table (PRI_KEY INT NOT NULL PRIMARY KEY AUTO_INCREMENT) AS
-SELECT o.o_order_id, YEAR(o.o_order_date) AS o_order_year, 
-MONTH(o.o_order_date) AS o_order_month, DAY(o.o_order_date) AS o_order_day, 
-YEAR(o.o_shipped_date) AS o_shipped_year, 
-MONTH(o.o_shipped_date) AS o_shipped_month, DAY(o.o_shipped_date) AS o_shipped_day,
-c.*, e.*, od.od_unit_price, od.od_quantity, od.od_discount, p.p_product_id, p.p_product_name,
-p.p_unit_price, p.p_units_in_stock, p.p_units_on_order, p.p_reorder_level, p.p_discontinued,
-ca.ca_category_name, ca.ca_description, s.*
-FROM orders o
-JOIN customers c  
-ON c.c_customer_id = o.o_customer_id
-JOIN employees e
-ON e.e_employee_id = o.o_employee_id
-JOIN order_details od
-ON od.od_order_id = o.o_order_id
-JOIN products p
-ON p.p_product_id = od.od_product_id
-JOIN categories ca
-ON ca.ca_category_id = p.p_category_id
-JOIN suppliers s
-ON s.s_supplier_id = p.p_supplier_id
+-- stage_table
+DROP TABLE IF EXISTS `stage_table`;
+CREATE TABLE `stage_table` (`stage_pri_key` INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT) AS
+SELECT o.`o_order_id`, YEAR(o.`o_order_date`) AS `o_order_year`, 
+MONTH(o.`o_order_date`) AS `o_order_month`, DAY(o.`o_order_date`) AS `o_order_day`, 
+YEAR(o.`o_shipped_date`) AS `o_shipped_year`, 
+MONTH(o.`o_shipped_date`) AS `o_shipped_month`, DAY(o.`o_shipped_date`) AS `o_shipped_day`,
+o.`o_order_date`, o.`o_shipped_date`, o.`o_ship_via`, o.`o_freight`, o.`o_ship_name`, o.`o_ship_address`,
+o.`o_ship_city`, o.`o_ship_region`, o.`o_ship_postal_code`, o.`o_ship_country`,
+c.*, e.*, p.`p_product_id`, p.`p_product_name`, p.`p_quantity_per_unit`, 
+p.`p_unit_price`, p.`p_units_in_stock`, p.`p_units_on_order`, p.`p_reorder_level`, p.`p_discontinued`,
+ca.*, s.*
+FROM `orders` o
+JOIN `customers` c  
+ON c.`c_customer_id` = o.`o_customer_id`
+JOIN `employees` e
+ON e.`e_employee_id` = o.`o_employee_id`
+JOIN `products` p
+ON p.`p_product_id` = o.`o_product_id`
+JOIN `categories` ca
+ON ca.`ca_category_id` = p.`p_category_id`
+JOIN `suppliers` s
+ON s.`s_supplier_id` = p.`p_supplier_id`
+ORDER BY o.`o_order_date`
 ;
-
-
 
 -- DIM_CUSTOMER
 
-DROP TABLE IF EXISTS DIM_CUSTOMER;
-CREATE TABLE DIM_CUSTOMER (
-  C_CUSTKEY    INTEGER PRIMARY KEY NOT NULL,
-  C_NAME       TEXT NOT NULL,
-  C_ADDRESS    TEXT NOT NULL,
-  C_NATION    TEXT NOT NULL,
-  C_PHONE      TEXT NOT NULL,
-  C_ACCTBAL    INTEGER NOT NULL,
-  C_MKTSEGMENT TEXT NOT NULL,
-  C_COMMENT    TEXT NOT NULL
+DROP TABLE IF EXISTS `dim_customers`;
+CREATE TABLE `dim_customers` (
+  `dim_customers_id` INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  `c_customer_id`    CHARACTER VARYING(60) NOT NULL,
+  `c_company_name`       TEXT NOT NULL,
+  `c_contact_name`    TEXT DEFAULT NULL,
+  `c_contact_title`    TEXT DEFAULT NULL,
+  `c_address`      TEXT DEFAULT NULL,
+  `c_city`    TEXT DEFAULT NULL,
+  `c_region` TEXT DEFAULT NULL,
+  `c_postal_code`    TEXT DEFAULT NULL,
+  `c_country`    TEXT DEFAULT NULL,
+  `c_phone`    TEXT DEFAULT NULL,
+  `c_fax`    TEXT DEFAULT NULL
+	-- KEY `fk_dim_customers_customers_idx` (`c_customer_id`),
+    -- KEY `fk_dim_customers_customers_idx` (`c_company_name`),
+    -- KEY `fk_dim_customers_customers_idx` (`c_contact_name`),
+	-- KEY `fk_dim_customers_customers_idx` (`c_contact_title`),
+    -- KEY `fk_dim_customers_customers_idx` (`c_address`),
+    -- KEY `fk_dim_customers_customers_idx` (`c_city`),
+	-- KEY `fk_dim_customers_customers_idx` (`c_region`),
+    -- KEY `fk_dim_customers_customers_idx` (`c_postal_code`),
+    -- KEY `fk_dim_customers_customers_idx` (`c_country`),
+	-- KEY `fk_dim_customers_customers_idx` (`c_phone`),
+    -- KEY `fk_dim_customers_customers_idx` (`c_fax`),
+    -- CONSTRAINT `fk_dim_customers` FOREIGN KEY (`c_customer_id`) REFERENCES `stage_table` (`c_customer_id`) ON UPDATE CASCADE,
+    -- CONSTRAINT `fk_dim_customers` FOREIGN KEY (`c_company_name`) REFERENCES `stage_table` (`c_company_name`) ON UPDATE CASCADE,
+    -- CONSTRAINT `fk_dim_customers` FOREIGN KEY (`c_contact_name`) REFERENCES `stage_table` (`c_contact_name`) ON UPDATE CASCADE,
+	-- CONSTRAINT `fk_dim_customers` FOREIGN KEY (`c_contact_title`) REFERENCES `stage_table` (`c_contact_title`) ON UPDATE CASCADE,
+    -- CONSTRAINT `fk_dim_customers` FOREIGN KEY (`c_address`) REFERENCES `stage_table` (`c_address`) ON UPDATE CASCADE,
+    -- CONSTRAINT `fk_dim_customers` FOREIGN KEY (`c_city`) REFERENCES `stage_table` (`c_city`) ON UPDATE CASCADE,
+	-- CONSTRAINT `fk_dim_customers` FOREIGN KEY (`c_region`) REFERENCES `stage_table` (`c_region`) ON UPDATE CASCADE,
+    -- CONSTRAINT `fk_dim_customers` FOREIGN KEY (`c_postal_code`) REFERENCES `stage_table` (`c_postal_code`) ON UPDATE CASCADE,
+    -- CONSTRAINT `fk_dim_customers` FOREIGN KEY (`c_country`) REFERENCES `stage_table` (`c_country`) ON UPDATE CASCADE,
+    -- CONSTRAINT `fk_dim_customers` FOREIGN KEY (`c_phone`) REFERENCES `stage_table` (`c_phone`) ON UPDATE CASCADE,
+    -- CONSTRAINT `fk_dim_customers` FOREIGN KEY (`c_fax`) REFERENCES `stage_table` (`c_fax`) ON UPDATE CASCADE
   );
   
-INSERT INTO DIM_CUSTOMER
-SELECT DISTINCT sto.C_CUSTKEY, sto.C_NAME, sto.C_ADDRESS, sto.N_NAME, sto.C_PHONE, sto.C_ACCTBAL, sto.C_MKTSEGMENT, sto.C_COMMENT 
-FROM stage_table_one sto;
+INSERT INTO `dim_customers` (`c_customer_id`, `c_company_name`, `c_contact_name`, `c_contact_title`, `c_address`, 
+ `c_city`, `c_region`, `c_postal_code`, `c_country`, `c_phone`, `c_fax`)
+SELECT DISTINCT st.c_customer_id, st.c_company_name, st.c_contact_name, st.c_contact_title, st.c_address, 
+st.c_city, st.c_region, st.c_postal_code, st.c_country, st.c_phone, st.c_fax
+FROM `stage_table` st;
 
  -- DIM_ORDERS
  
-DROP TABLE IF EXISTS DIM_ORDERS;
-CREATE TABLE DIM_ORDERS (
-  O_ORDERKEY      INTEGER PRIMARY KEY NOT NULL,
-  O_ORDERSTATUS   TEXT NOT NULL,
-  O_ORDERPRIORITY TEXT NOT NULL,  
-  O_CLERK         TEXT NOT NULL, 
-  O_SHIPPRIORITY  INTEGER NOT NULL,
-  O_COMMENT       TEXT NOT NULL
+DROP TABLE IF EXISTS `dim_orders`;
+CREATE TABLE `dim_orders` (
+`dim_orders_id` INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+`o_order_id` INTEGER NOT NULL,
+`o_ship_via` INTEGER DEFAULT NULL,
+`o_freight` REAL DEFAULT NULL,
+`o_ship_name` CHARACTER VARYING(40) DEFAULT NULL,
+`o_ship_address` CHARACTER VARYING(60) DEFAULT NULL,
+`o_ship_city` CHARACTER VARYING(15) DEFAULT NULL,
+`o_ship_region` CHARACTER VARYING(15) DEFAULT NULL,
+`o_ship_postal_code` CHARACTER VARYING(10) DEFAULT NULL,
+`o_ship_country` CHARACTER VARYING(15) DEFAULT NULL
   );
 
   
-INSERT INTO DIM_ORDERS
-SELECT DISTINCT sto.O_ORDERKEY, sto.O_ORDERSTATUS, sto.O_ORDERPRIORITY, sto.O_CLERK, sto.O_SHIPPRIORITY, sto.O_COMMENT
-FROM stage_table_one sto;
+INSERT INTO `dim_orders` (`o_order_id`, `o_ship_via`, `o_freight`, `o_ship_name`, `o_ship_address`,
+ `o_ship_city`, `o_ship_region`, `o_ship_postal_code`, `o_ship_country`)
+SELECT DISTINCT st.o_order_id, st.o_ship_via, st.o_freight, st.o_ship_name, st.o_ship_address,
+st.o_ship_city, st.o_ship_region, st.o_ship_postal_code, st.o_ship_country
+FROM `stage_table` st;
 
 -- DIM_ORDER_DATE
 
-DROP TABLE IF EXISTS DIM_ORDER_DATE;
-CREATE TABLE DIM_ORDER_DATE (
-  PRIKEY INTEGER PRIMARY KEY NOT NULL,
-  O_ORDERDATE	DATE NOT NULL,
-  O_ORDERYEAR   SMALLINT NOT NULL,
-  O_ORDERMONTH SMALLINT NOT NULL,  
-  O_ORDERDAY SMALLINT NOT NULL
+DROP TABLE IF EXISTS `dim_order_date`;
+CREATE TABLE `dim_order_date` (
+`dim_orders_id` INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+`o_order_date` DATE NOT NULL,
+`o_order_year` SMALLINT NOT NULL,
+`o_order_month` SMALLINT NOT NULL, 
+`o_order_day` SMALLINT NOT NULL
   );
   
-INSERT INTO DIM_ORDER_DATE
-SELECT DISTINCT sto.PRIKEY, sto.O_ORDERDATE, sto.O_ORDERYEAR, sto.O_ORDERMONTH, sto.O_ORDERDAY
-FROM stage_table_one sto;
+INSERT INTO `dim_order_date` (`o_order_date`, `o_order_year`, `o_order_month`, `o_order_day`)
+SELECT DISTINCT st.o_order_date, st.o_order_year, st.o_order_month, st.o_order_day
+FROM `stage_table` st;
 
--- DIM_SUPPLIER
+-- DIM_SHIPPED_DATE
 
-DROP TABLE IF EXISTS DIM_SUPPLIER;
-CREATE TABLE DIM_SUPPLIER (
-S_SUPPKEY   INTEGER PRIMARY KEY NOT NULL,
-S_NAME      TEXT NOT NULL,
-S_ADDRESS   TEXT NOT NULL,
-S_NATION 	  TEXT NOT NULL,
-S_PHONE     TEXT NOT NULL,
-S_ACCTBAL   INTEGER NOT NULL,
-S_COMMENT   TEXT NOT NULL
+DROP TABLE IF EXISTS `dim_shipped_date`;
+CREATE TABLE `dim_shipped_date` (
+`dim_shipped_id` INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+`o_shipped_date` DATE DEFAULT NULL,
+`o_shipped_year` SMALLINT DEFAULT NULL,
+`o_shipped_month` SMALLINT DEFAULT NULL, 
+`o_shipped_day` SMALLINT DEFAULT NULL
+  );
+  
+INSERT INTO `dim_shipped_date` (`o_shipped_date`, `o_shipped_year`, `o_shipped_month`, `o_shipped_day`)
+SELECT DISTINCT st.o_shipped_date, st.o_shipped_year, st.o_shipped_month, st.o_shipped_day
+FROM `stage_table` st;
+
+-- DIM_EMPLOYEES
+
+DROP TABLE IF EXISTS `dim_employees`;
+CREATE TABLE `dim_employees` (
+	`dim_employees_id` INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    `e_employee_id` INTEGER NOT NULL,
+    `e_last_name` TEXT NOT NULL,
+    `e_first_name` TEXT NOT NULL,
+    `e_title` TEXT NOT NULL,
+    `e_title_of_courtesy` TEXT NOT NULL,
+    `e_birthdate` DATE NOT NULL,
+    `e_hiredate` DATE NOT NULL,
+    `e_address` TEXT NOT NULL,
+    `e_city` TEXT NOT NULL,
+    `e_region` TEXT DEFAULT NULL,
+    `e_postal_code` TEXT NOT NULL,
+    `e_country` TEXT NOT NULL,
+    `e_homephone` TEXT DEFAULT NULL,
+    `e_extension` TEXT DEFAULT NULL,
+    `e_notes` TEXT DEFAULT NULL,
+    `e_reports_to` INTEGER DEFAULT NULL,
+    `e_photo_path` TEXT NOT NULL
 );
   
-INSERT INTO DIM_SUPPLIER
-SELECT DISTINCT st.S_SUPPKEY, st.S_NAME, st.S_ADDRESS, st.N_NAME, st.S_PHONE, st.S_ACCTBAL, st.S_COMMENT 
-FROM stage_table_two st;
+INSERT INTO `dim_employees` (`e_employee_id`, `e_last_name`, `e_first_name`, `e_title`, `e_title_of_courtesy`,
+`e_birthdate`, `e_hiredate`, `e_address`, `e_city`, `e_region`, `e_postal_code`, `e_country`,`e_homephone`,
+ `e_extension`, `e_notes`, `e_reports_to`, `e_photo_path`)
+SELECT DISTINCT st.e_employee_id, st.e_last_name, st.e_first_name, st.e_title, st.e_title_of_courtesy, 
+st.e_birthdate, st.e_hiredate, st.e_address, st.e_city, st.e_region, st.e_postal_code, st.e_country, 
+st.e_homephone, st.e_extension, st.e_notes, st.e_reports_to, st.e_photo_path
+FROM `stage_table` st;
 
--- DIM_PART
+-- DIM_PRODUCTS
 
-DROP TABLE IF EXISTS DIM_PART;  
-CREATE TABLE DIM_PART (
-P_PARTKEY     INTEGER PRIMARY KEY NOT NULL,
-P_NAME        TEXT NOT NULL,
-P_MFGR        TEXT NOT NULL,
-P_BRAND       TEXT NOT NULL,
-P_TYPE        TEXT NOT NULL,
-P_SIZE        INTEGER NOT NULL,
-P_CONTAINER   TEXT NOT NULL,
-P_RETAILPRICE INTEGER NOT NULL,
-P_COMMENT     TEXT NOT NULL
+DROP TABLE IF EXISTS `dim_products`;  
+CREATE TABLE `dim_products` (
+	`dim_products_id` INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    `p_product_id` INTEGER NOT NULL,
+    `p_product_name` CHARACTER VARYING(40) NOT NULL,
+    `p_units_on_order` INTEGER DEFAULT NULL,
+    `p_reorder_level` INTEGER DEFAULT NULL,
+    `p_discontinued` INTEGER NOT NULL
 );
 
-INSERT INTO DIM_PART
-SELECT DISTINCT st.P_PARTKEY, st.P_NAME, st.P_MFGR, st.P_BRAND, st.P_TYPE, st.P_SIZE, st.P_CONTAINER, st.P_RETAILPRICE, st.P_COMMENT
-FROM stage_table_two st;
+INSERT INTO `dim_products` (`p_product_id`, `p_product_name`, `p_units_on_order`, `p_reorder_level`, `p_discontinued`)
+SELECT DISTINCT st.p_product_id, st.p_product_name, st.p_units_on_order, st.p_reorder_level, st.p_discontinued
+FROM `stage_table` st;
 
--- DIM_LINEITEM
+-- DIM_CATEGORIES
 
-DROP TABLE IF EXISTS DIM_LINEITEM;
-CREATE TABLE DIM_LINEITEM (
-  PRIKEY    INTEGER PRIMARY KEY NOT NULL,
-  L_LINENUMBER    INTEGER NOT NULL,
-  L_RETURNFLAG    TEXT NOT NULL,
-  L_LINESTATUS    TEXT NOT NULL,
-  L_SHIPINSTRUCT  TEXT NOT NULL,
-  L_SHIPMODE      TEXT NOT NULL,
-  L_COMMENT       TEXT NOT NULL
+DROP TABLE IF EXISTS `dim_categories`;  
+CREATE TABLE `dim_categories` (
+	`dim_categories_id` INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+	`ca_category_id` INTEGER NOT NULL,
+    `ca_category_name` TEXT NOT NULL,
+    `ca_description` TEXT DEFAULT NULL
+);
+
+INSERT INTO `dim_categories` (`ca_category_id`, `ca_category_name`, `ca_description`)
+SELECT DISTINCT st.ca_category_id, st.ca_category_name, st.ca_description
+FROM `stage_table` st;
+
+-- DIM_SUPPLIERS
+
+DROP TABLE IF EXISTS `dim_suppliers`;
+CREATE TABLE `dim_suppliers` (
+	`dim_suppliers_id` INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+	`s_supplier_id` INTEGER NOT NULL,
+    `s_company_name` CHARACTER VARYING(40) NOT NULL,
+    `s_contact_name` CHARACTER VARYING(30) DEFAULT NULL,
+    `s_contact_title` CHARACTER VARYING(30) DEFAULT NULL,
+    `s_address` CHARACTER VARYING(60) DEFAULT NULL,
+    `s_city` CHARACTER VARYING(15) DEFAULT NULL,
+    `s_region` CHARACTER VARYING(15) DEFAULT NULL,
+    `s_postal_code` CHARACTER VARYING(10) DEFAULT NULL,
+    `s_country` CHARACTER VARYING(15) DEFAULT NULL,
+    `s_phone` CHARACTER VARYING(24) DEFAULT NULL,
+    `s_fax` CHARACTER VARYING(24) DEFAULT NULL,
+    `s_home_page` TEXT DEFAULT NULL
   );
 
-INSERT INTO DIM_LINEITEM
-SELECT DISTINCT sto.PRIKEY, sto.L_LINENUMBER, sto.L_RETURNFLAG, sto.L_LINESTATUS, sto.L_SHIPINSTRUCT, 
-sto.L_SHIPMODE, sto.L_COMMENT
-FROM stage_table_one sto;
+INSERT INTO `dim_suppliers` (`s_supplier_id`, `s_company_name`, `s_contact_name`, `s_contact_title`, `s_address`,
+ `s_city`, `s_region`, `s_postal_code`, `s_country`, `s_phone`, `s_fax`, `s_home_page` )
+SELECT DISTINCT st.s_supplier_id, st.s_company_name, st.s_contact_name, st.s_contact_title, st.s_address, 
+st.s_city, st.s_region, st.s_postal_code, st.s_country, st.s_phone, st.s_fax, st.s_home_page
+FROM `stage_table` st;
 
 -- FACT_MODEL_ONE
 
-DROP TABLE IF EXISTS FACT_MODEL_ONE;  
-CREATE TABLE FACT_MODEL_ONE (
-PRIKEY       INTEGER NOT NULL,
-C_CUSTKEY	INTEGER NOT NULL,
-O_ORDERKEY     INTEGER NOT NULL,
-L_QUANTITY      INTEGER NOT NULL,
-L_EXTENDEDPRICE INTEGER NOT NULL,
-L_DISCOUNT      INTEGER NOT NULL,
-L_TAX           INTEGER NOT NULL,
-O_TOTALPRICE   INTEGER NOT NULL,
-O_ORDERDATE  DATE NOT NULL
+DROP TABLE IF EXISTS `fact_model`;  
+CREATE TABLE `fact_model` (
+`fact_primary_key` INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+`c_customer_id`    CHARACTER VARYING(60) NOT NULL,
+`o_order_id` INTEGER NOT NULL,
+`e_employee_id` INTEGER NOT NULL,
+`s_supplier_id` INTEGER NOT NULL,
+`ca_category_id` INTEGER NOT NULL,
+`p_product_id` INTEGER NOT NULL,
+`p_quantity_per_unit` CHARACTER VARYING(20) DEFAULT NULL,
+`p_unit_price` REAL DEFAULT NULL,
+`p_units_in_stock` INTEGER DEFAULT NULL,
+`o_order_date` DATE NOT NULL,
+`o_shipped_date` DATE DEFAULT NULL
 );
 
-INSERT INTO FACT_MODEL_ONE
-SELECT DISTINCT DL.PRIKEY, DC.C_CUSTKEY, DOR.O_ORDERKEY, sto.L_QUANTITY, 
-sto.L_EXTENDEDPRICE, sto.L_DISCOUNT, sto.L_TAX, sto.O_TOTALPRICE, DOD.O_ORDERDATE
-FROM stage_table_one sto 
-JOIN DIM_CUSTOMER DC ON
-DC.C_CUSTKEY = sto.C_CUSTKEY
-JOIN DIM_ORDERS DOR ON
-DOR.O_ORDERKEY = sto.O_ORDERKEY
-JOIN DIM_ORDER_DATE DOD ON
-DOD.PRIKEY = DOR.O_ORDERKEY
-JOIN DIM_LINEITEM DL ON
-DL.PRIKEY = sto.PRIKEY;
+INSERT INTO `fact_model` (`c_customer_id`, `o_order_id`, `e_employee_id`, `s_supplier_id`, `ca_category_id`,
+`p_product_id`, `p_quantity_per_unit`, `p_unit_price`, `p_units_in_stock`, `o_order_date`, `o_shipped_date` )
+SELECT DISTINCT dc.c_customer_id, dor.o_order_id, de.e_employee_id, ds.s_supplier_id, 
+dca.ca_category_id, dp.p_product_id, st.p_quantity_per_unit, st.p_unit_price, st.p_units_in_stock, 
+dod.o_order_date, dsd.o_shipped_date
+FROM `stage_table` st
+JOIN `dim_customers` dc ON
+dc.`c_customer_id` = st.`c_customer_id`
+JOIN `dim_orders` dor ON
+dor.`o_order_id` = st.`o_order_id`
+JOIN `dim_employees` de ON
+de.`e_employee_id` = st.`e_employee_id`
+JOIN `dim_suppliers` ds ON
+ds.`s_supplier_id` = st.`s_supplier_id`
+JOIN `dim_categories` dca ON
+dca.`ca_category_id` = st.`ca_category_id`
+JOIN `dim_products` dp ON
+dp.`p_product_id` = st.`p_product_id`
+JOIN `dim_order_date` dod ON
+dod.`o_order_date` = st.`o_order_date`
+JOIN `dim_shipped_date` dsd ON
+dsd.`o_shipped_date` = st.`o_shipped_date`
+ORDER BY dod.`o_order_date`;
 
 
--- FACT_MODEL_TWO
-DROP TABLE IF EXISTS FACT_MODEL_TWO;  
-CREATE TABLE FACT_MODEL_TWO (
-S_SUPPKEY    INTEGER NOT NULL,
-P_PARTKEY     INTEGER NOT NULL,
-PS_AVAILQTY	  INTEGER NOT NULL,
-PS_SUPPLYCOST INTEGER NOT NULL,
-P_RETAILPRICE INTEGER NOT NULL
-);
 
-INSERT INTO FACT_MODEL_TWO
-SELECT DISTINCT DS.S_SUPPKEY, DP.P_PARTKEY, st.PS_AVAILQTY, 
-st.PS_SUPPLYCOST, st.P_RETAILPRICE
-FROM stage_table_two st 
-JOIN DIM_SUPPLIER DS ON
-DS.S_SUPPKEY = st.S_SUPPKEY
-JOIN DIM_PART DP ON
-DP.P_PARTKEY = st.P_PARTKEY
-;
 
 
