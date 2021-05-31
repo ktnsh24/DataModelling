@@ -24,7 +24,9 @@ To start with the tasks, clone the repository to your local machine.
    
     1.2 I recommend you to read the store_schema.sql file and try to understand how the schema is designed.
     
-    1.3 Check store_schema.PNG image and understand how the table is connected.
+    1.3 Check the below image and understand how the table is connected.
+   
+![](store_project/store_schema.png)
 
 2. Open the etl_job.py file in your favorite IDE. Update the database details inside the etl_job.py
 3. Check the other details and update them as required.
@@ -45,7 +47,9 @@ To start with the tasks, clone the repository to your local machine.
     
     1.2 I recommend you to read the northwind_schema.sql file and try to understand how the schema is designed.
     
-    1.3 Check the northwind_schema.PNG image and understand how the table is connected.
+    1.3 Check the below image and understand how the table is connected.
+
+![](store_project/northwind_schema.png)
 
 2. Open the etl_job.py file in your favorite IDE. Update the database details inside the etl_job.py
 3. Check the other details and update them as required.
@@ -66,3 +70,12 @@ northwind_project - The northwind data is available on the Internet, and northwi
 Both datasets are tweaked a bit by me, so they don't resemble their actual instance.
 
 # Task 2
+In the task 2, we will create a star schema dimensional model. 
+To creata dimension and fact table for star schema, I have implemented following steps.
+
+## store_project
+
+1. Open the star_schema_store.sql script in your SQL workbench.
+2. If you press run, the star_schema_store.sql script will first cretae a stage table and then different dimension and fact table.
+3. The stage table will join all the tables from the store_project schema and only populate the transactional data. 
+
