@@ -1,6 +1,11 @@
 USE store_schema;
 
--- stage_table (Extract data from OLTP db), Declare the Grain 
+-- In this OLTP system, table customers is in a normalized state but include redundant data. 
+-- Redundant data mean here is, customer id 1 never made any transactions. customer id 1 never 
+-- ordered anything in a given period of time. 
+-- Other tables such as products, shippers, and order statuses are also in a normalized state but include redundant data.
+
+
 DROP TABLE IF EXISTS stage_table;
 CREATE TABLE stage_table (pri_key INT NOT NULL PRIMARY KEY AUTO_INCREMENT) AS
 SELECT o.order_id, o.order_date, YEAR(o.order_date) AS order_year, 
@@ -110,7 +115,7 @@ CREATE TABLE fact_sales (
 `product_id` INTEGER NOT NULL,
 `shipper_id` INTEGER NOT NULL,
 `quantity`     DECIMAL(4,2) NOT NULL,
-`item_unit_price` INTEGER NOT NULL,
+`item_unit_price` DECIMAL(4,2) NOT NULL,
 `order_date`     DATE NOT NULL
 );
 
@@ -132,24 +137,5 @@ ds.shipper_id = st.shipper_id
 ORDER BY dod.order_date;
 
 
--- FACT_MODEL_TWO
-DROP TABLE IF EXISTS FACT_MODEL_TWO;  
-CREATE TABLE FACT_MODEL_TWO (
-S_SUPPKEY    INTEGER NOT NULL,
-P_PARTKEY     INTEGER NOT NULL,
-PS_AVAILQTY	  INTEGER NOT NULL,
-PS_SUPPLYCOST INTEGER NOT NULL,
-P_RETAILPRICE INTEGER NOT NULL
-);
-
-INSERT INTO FACT_MODEL_TWO
-SELECT DISTINCT DS.S_SUPPKEY, DP.P_PARTKEY, st.PS_AVAILQTY, 
-st.PS_SUPPLYCOST, st.P_RETAILPRICE
-FROM stage_table_two st 
-JOIN DIM_SUPPLIER DS ON
-DS.S_SUPPKEY = st.S_SUPPKEY
-JOIN DIM_PART DP ON
-DP.P_PARTKEY = st.P_PARTKEY
-;
 
 

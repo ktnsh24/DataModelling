@@ -1,12 +1,16 @@
 USE `northwind_schema`;
--- Currently data in the database include redundant data. Tables such as customers, employees, suppliers, and categories 
--- are in normalised state but still include redundant data. For analytics purpose we only need those transactions which occur.
--- In case of customers, we only need those customers who made some transactions in a given period.
--- In case of suppliers, we only need those suppliers who supplied something in a given period.
--- In case of employees, we only need those employees who attended customers in a given period.
--- Table orders is in the denormalised state and include no redundant data. However for the 
--- purpose of dimensional modelling, we can normalise orders table further.
--- Table products in in denormalsied state but include redundant data.
+-- Currently, data in the database include redundant data. Tables such as `customer`s, `employees`, `suppliers`, and `categories` 
+-- are in the normalized state but still include redundant data. For analytics purpose, we only need those transactions 
+-- which occur in the given time.
+-- In the case of `customers`, we only need those customers who made some transactions in a given period.
+-- In the case of `suppliers`, we only need those suppliers who supplied something in a given period.
+-- In the case of `employees`, we only need those employees who attended customers in a given period.
+-- Table `orders` is in the denormalized state and include no redundant data. However for the 
+-- the purpose of dimensional modeling, we can normalize the `orders` table further.
+-- Table `products` in the denormalized state but include redundant data.
+
+-- Grain- print all the order based on 'order date' made by different customers, products they bought, 
+-- supplier who is a supplier of the product, and the category where product belongs.
 
 -- stage_table
 DROP TABLE IF EXISTS `stage_table`;
@@ -50,28 +54,6 @@ CREATE TABLE `dim_customers` (
   `c_country`    TEXT DEFAULT NULL,
   `c_phone`    TEXT DEFAULT NULL,
   `c_fax`    TEXT DEFAULT NULL
-	-- KEY `fk_dim_customers_customers_idx` (`c_customer_id`),
-    -- KEY `fk_dim_customers_customers_idx` (`c_company_name`),
-    -- KEY `fk_dim_customers_customers_idx` (`c_contact_name`),
-	-- KEY `fk_dim_customers_customers_idx` (`c_contact_title`),
-    -- KEY `fk_dim_customers_customers_idx` (`c_address`),
-    -- KEY `fk_dim_customers_customers_idx` (`c_city`),
-	-- KEY `fk_dim_customers_customers_idx` (`c_region`),
-    -- KEY `fk_dim_customers_customers_idx` (`c_postal_code`),
-    -- KEY `fk_dim_customers_customers_idx` (`c_country`),
-	-- KEY `fk_dim_customers_customers_idx` (`c_phone`),
-    -- KEY `fk_dim_customers_customers_idx` (`c_fax`),
-    -- CONSTRAINT `fk_dim_customers` FOREIGN KEY (`c_customer_id`) REFERENCES `stage_table` (`c_customer_id`) ON UPDATE CASCADE,
-    -- CONSTRAINT `fk_dim_customers` FOREIGN KEY (`c_company_name`) REFERENCES `stage_table` (`c_company_name`) ON UPDATE CASCADE,
-    -- CONSTRAINT `fk_dim_customers` FOREIGN KEY (`c_contact_name`) REFERENCES `stage_table` (`c_contact_name`) ON UPDATE CASCADE,
-	-- CONSTRAINT `fk_dim_customers` FOREIGN KEY (`c_contact_title`) REFERENCES `stage_table` (`c_contact_title`) ON UPDATE CASCADE,
-    -- CONSTRAINT `fk_dim_customers` FOREIGN KEY (`c_address`) REFERENCES `stage_table` (`c_address`) ON UPDATE CASCADE,
-    -- CONSTRAINT `fk_dim_customers` FOREIGN KEY (`c_city`) REFERENCES `stage_table` (`c_city`) ON UPDATE CASCADE,
-	-- CONSTRAINT `fk_dim_customers` FOREIGN KEY (`c_region`) REFERENCES `stage_table` (`c_region`) ON UPDATE CASCADE,
-    -- CONSTRAINT `fk_dim_customers` FOREIGN KEY (`c_postal_code`) REFERENCES `stage_table` (`c_postal_code`) ON UPDATE CASCADE,
-    -- CONSTRAINT `fk_dim_customers` FOREIGN KEY (`c_country`) REFERENCES `stage_table` (`c_country`) ON UPDATE CASCADE,
-    -- CONSTRAINT `fk_dim_customers` FOREIGN KEY (`c_phone`) REFERENCES `stage_table` (`c_phone`) ON UPDATE CASCADE,
-    -- CONSTRAINT `fk_dim_customers` FOREIGN KEY (`c_fax`) REFERENCES `stage_table` (`c_fax`) ON UPDATE CASCADE
   );
   
 INSERT INTO `dim_customers` (`c_customer_id`, `c_company_name`, `c_contact_name`, `c_contact_title`, `c_address`, 
